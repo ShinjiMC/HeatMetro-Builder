@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  # --- 1. FRONTEND (Nginx Reverse Proxy) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mesh-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - github-api
+      - sonar-api
+    networks:
+      - mesh-network
+
+  # --- 2. GITHUB API (Clonador) ---
+  github-api:
+    build:
+      context: ./github-api
+      dockerfile: Dockerfile
+    container_name: mesh-github-api
+    environment:
+      - PORT=3000
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - CLONES_DIR=/app/clones
+    volumes:
+      - ./data_clones:/app/clones
+    networks:
+      - mesh-network
+
+  # --- 3. SONAR API (Analizador) ---
+  sonar-api:
+    build:
+      context: ./sonar-api
+      dockerfile: Dockerfile
+    container_name: mesh-sonar-api
+    environment:
+      - PORT=3001
+      - SONAR_TOKEN=${SONAR_TOKEN}
+      - CLONES_PATH=/app/clones
+    volumes:
+      - ./data_clones:/app/clones
+      - sonar_db_data:/app/data
+      - g_versions_cache:/root/.g
+    networks:
+      - mesh-network
+
+volumes:
+  sonar_db_data:
+  g_versions_cache:
+
+networks:
+  mesh-network:
+    driver: bridge

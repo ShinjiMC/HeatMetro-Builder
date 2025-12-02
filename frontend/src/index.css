@@ -1,0 +1,244 @@
+/* index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* --- Paleta Logo (Modo Claro) --- */
+  --bg-color: #f0f2f5;
+  --surface-color: #ffffff;
+  --text-primary: #1a202c;
+  --text-secondary: #718096;
+  --border-color: #e2e8f0;
+
+  /* Colores de Acento (Basados en el Logo) */
+  --brand-orange: #ff7d00; /* Pilar central */
+  --brand-blue: #3e8bff; /* Pilares laterales */
+  --brand-gradient: linear-gradient(135deg, #ff7d00 0%, #ffa53b 100%);
+
+  --input-bg: #f8fafc;
+  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --radius: 16px;
+}
+
+[data-theme="dark"] {
+  /* --- Paleta Logo (Modo Oscuro) --- */
+  --bg-color: #0f172a;
+  --surface-color: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --input-bg: #0f172a;
+  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
+  min-height: 100vh;
+  background-attachment: fixed;
+}
+
+/* --- Componentes UI --- */
+.container-custom {
+  max-width: 1200px; /* Ancho máximo para que no se estire demasiado */
+  margin: 0 auto; /* ESTO centra el contenido horizontalmente */
+  padding: 0 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+/* Navbar */
+.navbar-custom {
+  background-color: var(--surface-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background-color 0.3s ease;
+}
+
+.brand-title {
+  font-weight: 800;
+  font-size: 1.5rem;
+  background: linear-gradient(to right, var(--brand-blue), var(--brand-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-left: 10px;
+}
+
+/* Tarjeta Principal */
+.home-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px); /* Restar navbar */
+  padding: 20px;
+}
+
+.glass-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 40px;
+  width: 100%;
+  max-width: 600px;
+  transition: transform 0.2s ease;
+}
+
+/* Inputs y Selects */
+.field-group {
+  margin-bottom: 1.5rem;
+}
+
+.label-text {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-modern,
+.select-modern {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.input-modern:focus,
+.select-modern:focus {
+  outline: none;
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(62, 139, 255, 0.2);
+}
+
+/* Botones */
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  background: var(--brand-orange);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.1s;
+  background-image: var(--brand-gradient);
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 2px dashed var(--border-color);
+  color: var(--text-primary);
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+
+/* Tabs Toggle (Branch vs Tag) */
+.toggle-container {
+  display: flex;
+  background: var(--input-bg);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 15px;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background: var(--surface-color);
+  color: var(--brand-blue);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Loader Override */
+.lds-dual-ring:after {
+  border-color: var(--brand-orange) transparent var(--brand-orange) transparent !important;
+}
+
+/* Theme Toggle Button */
+.theme-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.theme-btn:hover {
+  background: var(--bg-color);
+  border-color: var(--brand-orange);
+}
+
+/* Agrega esto en src/index.css */
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  text-align: center;
+  /* Esta línea es la clave para que cambie de color: */
+  color: var(--text-primary);
+}
+
+.section-description {
+  color: var(--text-secondary); /* Gris suave en día, gris claro en noche */
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 1rem;
+}
