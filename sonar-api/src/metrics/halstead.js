@@ -2,6 +2,7 @@ const { spawn, execFile } = require("child_process");
 const readline = require("readline");
 const path = require("path");
 const util = require("util");
+const { minimatch } = require("minimatch");
 
 // Promisify para usar await limpio y secuencial
 const execFileAsync = util.promisify(execFile);
@@ -24,14 +25,9 @@ const REGEX = {
  * - RAM: O(1) (Constante, nunca crece).
  * - CPU: Optimizado con pre-compilación y short-circuiting.
  */
-async function getHalsteadMetrics(repoPath) {
-  console.log(
-    `--- Calculando Halstead (Secuencial/Ligero) en: ${repoPath} ---`
-  );
-
+async function getHalsteadMetrics(repoPath, exclusions = []) {
+  console.log(`--- Calculando Halstead en: ${repoPath} ---`);
   const results = [];
-
-  // 1. Iniciamos el stream de archivos desde el disco
   const findProcess = spawn("find", [
     repoPath,
     "-name",
@@ -40,44 +36,35 @@ async function getHalsteadMetrics(repoPath) {
     "-path",
     "*/vendor/*",
   ]);
-
-  // 2. Interfaz para leer línea por línea
   const rl = readline.createInterface({
     input: findProcess.stdout,
     crlfDelay: Infinity,
   });
 
   try {
-    // 3. Bucle Mágico 'for await'
-    // Node.js pausará automáticamente el stream 'find' mientras 'await' trabaja.
-    // Esto asegura que solo exista 1 archivo en memoria a la vez.
     for await (const line of rl) {
       const absFilePath = line.trim();
       if (!absFilePath) continue;
-
+      const relativePath = path
+        .relative(repoPath, absFilePath)
+        .replace(/\\/g, "/");
+      if (exclusions && exclusions.length > 0) {
+        const isExcluded = exclusions.some((pattern) =>
+          minimatch(relativePath, pattern, { dot: true, matchBase: true })
+        );
+        if (isExcluded) continue;
+      }
       try {
-        // Ejecutamos halstead y esperamos (Bloqueo lógico, no de CPU)
-        // execFile es más ligero que exec porque no levanta una shell
         const { stdout } = await execFileAsync("halstead", [absFilePath], {
           encoding: "utf8",
         });
-
-        // Procesamos y liberamos la memoria del stdout inmediatamente
         const metrics = parseHalsteadOutput(stdout);
-        const relativePath = path
-          .relative(repoPath, absFilePath)
-          .replace(/\\/g, "/");
-
         results.push({
           file_path: relativePath,
           ...metrics,
         });
-      } catch (err) {
-        // Si falla un archivo, no detenemos el proceso completo
-        // console.warn(`Error en ${path.basename(absFilePath)}`);
-      }
+      } catch (err) {}
     }
-
     console.log(`Procesados ${results.length} archivos con Halstead.`);
     return results;
   } catch (err) {

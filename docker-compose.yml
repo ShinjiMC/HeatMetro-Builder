@@ -44,12 +44,14 @@ services:
       - ./data_clones:/app/clones
       - sonar_db_data:/app/data
       - g_versions_cache:/root/.g
+      - maven_data:/root/.m2
     networks:
       - mesh-network
 
 volumes:
   sonar_db_data:
   g_versions_cache:
+  maven_data:
 
 networks:
   mesh-network:

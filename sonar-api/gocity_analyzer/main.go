@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gocity-analyzer/pkg/analyzer"
 	"gocity-analyzer/pkg/model"
@@ -38,7 +39,6 @@ func main() {
 
 	projectName := filepath.Base(path)
 
-	// --- MODIFICACIÓN 2: Lógica de Salida ---
 	useStdout := false
 	outName := fmt.Sprintf("%s.out", projectName)
 
@@ -49,11 +49,35 @@ func main() {
 			outName = os.Args[2]
 		}
 	}
+	var ignoreList []string
+	ignoreList = append(ignoreList, "/vendor/")
+	if len(os.Args) > 3 {
+		rawExclusions := os.Args[3]
+		if rawExclusions != "" {
+			parts := strings.Split(rawExclusions, ",")
+			for _, p := range parts {
+				trimmed := strings.TrimSpace(p)
+				if trimmed != "" {
+					clean := trimmed
+					if strings.HasPrefix(clean, "/") {
+						clean = "**" + clean
+					}
+					if strings.HasSuffix(clean, "/") {
+						clean = clean + "**"
+					} else if !strings.Contains(clean, "*") && strings.Contains(clean, "/") {
+						clean = clean + "/**"
+					}
+					
+					ignoreList = append(ignoreList, clean)
+				}
+			}
+		}
+	}
 
 	log.Infof("Analizando proyecto local: %s", projectName)
+	log.Infof("Exclusiones: %v", ignoreList)
 	log.Infof("Ruta de entrada: %s", path)
-
-	codeAnalyzer := analyzer.NewAnalyzer(path, analyzer.WithIgnoreList("/vendor/"))
+	codeAnalyzer := analyzer.NewAnalyzer(path, analyzer.WithIgnoreList(ignoreList...))
 	summary, err := codeAnalyzer.Analyze()
 	if err != nil {
 		log.Fatalf("Error al analizar el código: %v", err)

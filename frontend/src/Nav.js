@@ -33,10 +33,10 @@ const Nav = () => {
           className="is-hidden-mobile"
           style={{ display: "flex", gap: "10px" }}
         >
-          <a href="https://github.com/ShinjiMC/GoTestCity">
+          <a href="https://github.com/ShinjiMC/HeatMetro-Builder">
             <img
               alt="Stars"
-              src="https://img.shields.io/github/stars/ShinjiMC/GoTestCity?style=flat&color=FF7D00&labelColor=1a202c"
+              src="https://img.shields.io/github/stars/ShinjiMC/HeatMetro-Builder?style=flat&color=FF7D00&labelColor=1a202c"
             />
           </a>
         </div>

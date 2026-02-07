@@ -1,11 +1,13 @@
 // src/services/analysis.runner.js
-const { setupGoEnvironment } = require("../metrics/setup_go");
-const { getHalsteadMetrics } = require("../metrics/halstead");
-const { getCouplingMetrics } = require("../metrics/coupling");
-const { getLayoutMetrics } = require("../metrics/layout");
-const { getChurnMetrics } = require("../metrics/churn");
-const { processSonarAnalysis } = require("../metrics/sonar.manager");
+const { detectProjectLanguage } = require("../services/select_language");
+const {
+  processSonarAnalysis,
+  getSonarExclusions,
+} = require("../metrics/sonar.manager");
 require("dotenv").config();
+
+const GoStrategy = require("../strategies/go.strategy");
+const JavaStrategy = require("../strategies/java.strategy");
 
 async function runFullAnalysis(projectPath, sonarPropsPath, onProgress) {
   console.log("🚀 Iniciando Análisis Completo en memoria...");
@@ -16,22 +18,47 @@ async function runFullAnalysis(projectPath, sonarPropsPath, onProgress) {
   };
 
   try {
-    await setupGoEnvironment(projectPath);
-    notify("halstead"); // Notificar Frontend
-    console.log("Ejecutando Halstead...");
-    results.halstead = await getHalsteadMetrics(projectPath);
+    const exclusions = getSonarExclusions(sonarPropsPath);
+    console.log("🛡️ Exclusiones globales detectadas:", exclusions);
 
-    notify("coupling"); // Notificar Frontend
-    console.log("Ejecutando Coupling...");
-    results.coupling = await getCouplingMetrics(projectPath);
+    const language = detectProjectLanguage(projectPath);
+    console.log(`Lenguaje detectado: ${language}`);
 
-    notify("churn"); // Notificar Frontend
-    console.log("Ejecutando Churn...");
-    results.churn = await getChurnMetrics(projectPath);
+    let strategy;
+    switch (language) {
+      case "GO":
+        strategy = GoStrategy;
+        break;
+      case "JAVA":
+        strategy = JavaStrategy;
+        break;
+      default:
+        throw new Error(`Lenguaje no soportado o desconocido: ${language}`);
+    }
 
-    notify("layout"); // Notificar Frontend
-    console.log("Ejecutando Layout...");
-    results.layout = await getLayoutMetrics(projectPath);
+    await strategy.setupEnvironment(projectPath);
+
+    notify("halstead");
+    console.log(`[${language}] Ejecutando Halstead...`);
+    results.halstead = await strategy.getHalsteadMetrics(
+      projectPath,
+      exclusions
+    );
+
+    notify("coupling");
+    console.log(`[${language}] Ejecutando Coupling...`);
+    results.coupling = await strategy.getCouplingMetrics(
+      projectPath,
+      exclusions
+    );
+
+    notify("churn");
+    console.log(`[${language}] Ejecutando Churn...`);
+    results.churn = await strategy.getChurnMetrics(projectPath, exclusions);
+
+    notify("layout");
+    console.log(`[${language}] Ejecutando Layout...`);
+    results.layout = await strategy.getLayoutMetrics(projectPath, exclusions);
 
     notify("sonar"); // Notificar Frontend
     const SONAR_TOKEN = process.env.SONAR_TOKEN;
@@ -39,7 +66,8 @@ async function runFullAnalysis(projectPath, sonarPropsPath, onProgress) {
     results.sonar = await processSonarAnalysis(
       projectPath,
       SONAR_TOKEN,
-      sonarPropsPath
+      sonarPropsPath,
+      language
     );
 
     console.log("Análisis completado.");

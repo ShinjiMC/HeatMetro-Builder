@@ -152,6 +152,8 @@ function setupGoEnvironment(rawPath) {
   // }
 
   console.log("Verificando herramientas de análisis...");
+  const [major, minor] = goVersion.split(".").map(Number);
+  const isLegacyGo = major < 1 || (major === 1 && minor < 16);
   const tools = [
     {
       name: "halstead",
@@ -163,13 +165,24 @@ function setupGoEnvironment(rawPath) {
     if (!commandExists(tool.name)) {
       console.log(`Instalando ${tool.name}...`);
       try {
-        execSync(`go install ${tool.url}`, { stdio: "inherit" });
+        let installCmd;
+
+        if (isLegacyGo) {
+          // Estrategia Legacy (Go < 1.16):
+          const legacyUrl = tool.url.split("@")[0];
+          console.log(
+            `Detectado Go ${goVersion} (< 1.16). Usando método legacy 'go get'...`
+          );
+          installCmd = `go get ${legacyUrl}`;
+        } else {
+          installCmd = `go install ${tool.url}`;
+        }
+        execSync(installCmd, { stdio: "inherit" });
       } catch (e) {
         console.error(`Error instalando ${tool.name}:`, e.message);
       }
     }
   });
-
   console.log("Entorno Go configurado correctamente.");
   return { success: true, version: goVersion };
 }

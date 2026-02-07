@@ -9,12 +9,29 @@ FROM node:20-bookworm
 RUN apt-get update && apt-get install -y \
     curl \
     git \
-    openjdk-17-jre \
+    ca-certificates \
+    openjdk-17-jdk \
+    maven \
     python3 \
     make \
     g++ \
+    gcc \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
+# --- NUEVO: Instalar Java 8 (Temurin) manualmente en /opt/java/openjdk8 ---
+# Esto descarga el binario oficial, lo descomprime y lo deja listo para usar.
+RUN mkdir -p /opt/java/openjdk8 && \
+    curl -L https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u392-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u392b08.tar.gz \
+    | tar -xz -C /opt/java/openjdk8 --strip-components=1
+
+# Configurar variables de entorno para tener ambos Javas disponibles
+ENV JAVA_HOME_17=/usr/lib/jvm/java-17-openjdk-amd64
+ENV JAVA_HOME_8=/opt/java/openjdk8
+
+# Por defecto usamos el 17, pero el script podrá cambiar a JAVA_HOME_8 cuando sea necesario
+ENV JAVA_HOME=$JAVA_HOME_17
+ENV PATH="$JAVA_HOME/bin:$PATH"
 WORKDIR /app
 
 # -----------------------------------------------------------------------------
@@ -37,6 +54,7 @@ ENV PATH="${G_HOME}/go/bin:${PATH}"
 
 # Configurar mirror para descargas más rápidas (opcional, usa el oficial de Google)
 ENV G_MIRROR="https://go.dev/dl/"
+ENV GODEBUG=cgocheck=0
 
 # 4. PRE-INSTALAR UNA VERSIÓN DE GO
 # Esto es vital para inicializar la estructura de carpetas de 'g' (/root/.g/...)
@@ -45,7 +63,7 @@ ENV G_MIRROR="https://go.dev/dl/"
 RUN g install 1.22.1 && g use 1.22.1
 
 # Verificamos que todo funciona
-RUN g --version && go version
+RUN g --version && go version && java -version && mvn -version
 
 # -----------------------------------------------------------------------------
 # 5. CONFIGURACIÓN DE NODE.JS (Tu aplicación)
